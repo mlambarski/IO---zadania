@@ -1,0 +1,415 @@
+//-------------------------------------Zadanie 1
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ConsoleApp3
+{
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			ThreadPool.QueueUserWorkItem(ThreadProc,500); // Dodanie zadania do puli w¹tków
+			ThreadPool.QueueUserWorkItem(ThreadProc,500);
+			Thread.Sleep(2000);
+			Console.ReadKey();
+		}
+
+		static void ThreadProc(Object stateinfo)
+		{
+			int czas = (int)stateinfo;
+			Thread.Sleep(czas);
+			Console.WriteLine(czas);
+		}
+	}
+}
+//----------------------------------------------------------------------------------------
+
+//------------------------------------Zadanie 2
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ConsoleApp3
+{
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			ThreadPool.QueueUserWorkItem(ThreadProc); //Dodanie zadania do puli w¹tków
+
+			ThreadPool.QueueUserWorkItem(ThreadProc2);
+			ThreadPool.QueueUserWorkItem(ThreadProc2);
+			Thread.Sleep(10000);
+		}
+
+		//serwer
+		static void ThreadProc(Object stateinfo)
+		{
+			TcpListener server = new TcpListener(IPAddress.Any, 1024); //Utworzenie serwera
+			server.Start();
+			while(true)
+			{
+				TcpClient client = server.AcceptTcpClient(); //Oczekiwanie na po³¹czenie przychodz¹ce
+				byte[] buffer = new byte[1024];
+				client.GetStream().Read(buffer, 0, 1024); //Odbieranie wiadomoœci
+				client.GetStream().Write(buffer, 0, buffer.Length); //Wysy³anie wiadomoœci
+			}
+		}
+
+		// klient
+		static void ThreadProc2(Object stateinfo)
+		{
+			TcpClient client = new TcpClient();
+			client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1024)); //Po³¹czenie siê klienta z serwerem
+			byte[] message = new ASCIIEncoding().GetBytes("wiadomosc"); //Zamiana wiadomoœci na bity
+			client.GetStream().Write(message, 0, message.Length); //Wys³anie wiadomoœci
+			
+		}
+	}
+}
+//--------------------------------------------------------------------------
+
+//----------------------------------Zadanie 3
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ConsoleApp3
+{
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			ThreadPool.QueueUserWorkItem(ThreadProc);
+
+			ThreadPool.QueueUserWorkItem(ThreadProc2);
+			ThreadPool.QueueUserWorkItem(ThreadProc2);
+			Thread.Sleep(5000);
+		}
+
+		//serwer
+		static void ThreadProc(Object stateinfo)
+		{
+			TcpListener server = new TcpListener(IPAddress.Any, 1024); //Utworzenie serwera
+			server.Start();
+			while(true)
+			{
+				TcpClient client = server.AcceptTcpClient(); //Oczekiwanie na po³¹czenie przychodz¹ce
+				byte[] buffer = new byte[1024];
+				client.GetStream().Read(buffer, 0, 1024); //Odbieranie wiadomoœci
+				var zmienna = Encoding.UTF8.GetString(buffer); //Zamiana bitów na tekst
+				Console.ForegroundColor = ConsoleColor.Red; //Zmiana koloru czcionki
+				Console.WriteLine("Otrzymalem wiadomosc: " + zmienna);
+				client.GetStream().Write(buffer, 0, buffer.Length); //Wys³anie wiadomoœci
+			}
+		}
+
+		//klient
+		static void ThreadProc2(Object stateinfo)
+		{
+			TcpClient client = new TcpClient();
+			client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1024));
+			byte[] message = new ASCIIEncoding().GetBytes("wiadomosc");
+			var zmienna = Encoding.UTF8.GetString(message); //Zamiana bitów na tekst
+			Console.ForegroundColor = ConsoleColor.Green; //Zmiana koloru czcionki
+			Console.WriteLine("Otrzymalem wiadomosc: " + zmienna);
+			client.GetStream().Write(message, 0, message.Length); //Wys³anie wiadomoœci
+			
+		}
+	}
+}
+//--------------------------------------------------------------------------
+
+//-------------------------------Zadanie 4
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace ConsoleApp3
+{
+	class Program
+	{
+		static void Main(string[] args)
+		{
+			ThreadPool.QueueUserWorkItem(ThreadProc);
+
+			ThreadPool.QueueUserWorkItem(ThreadProc2);
+			ThreadPool.QueueUserWorkItem(ThreadProc2);
+			Thread.Sleep(5000);
+		}
+
+		static void ThreadProc(Object stateinfo)
+		{
+			TcpListener server = new TcpListener(IPAddress.Any, 1024);
+			server.Start();
+			while(true)
+			{
+				TcpClient client = server.AcceptTcpClient();
+				byte[] buffer = new byte[1024];
+				client.GetStream().Read(buffer, 0, 1024);
+				lock(thisLock) //czêœæ krytyczna kodu, która zablokuje przep³yw kodu dla innych w¹tków, a¿ do jego zwolnienia.
+				{
+					var zmienna = Encoding.UTF8.GetString(buffer);
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("Otrzymalem wiadomosc: " + zmienna);
+					client.GetStream().Write(buffer, 0, buffer.Length);
+				}
+			}
+		}
+
+		static void ThreadProc2(Object stateinfo)
+		{
+			TcpClient client = new TcpClient();
+			client.Connect(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1024));
+			byte[] message = new ASCIIEncoding().GetBytes("wiadomosc");
+			var zmienna = Encoding.UTF8.GetString(message);
+			Console.ForegroundColor = ConsoleColor.Green;
+			Console.WriteLine("Otrzymalem wiadomosc: " + zmienna);
+			client.GetStream().Write(message, 0, message.Length);
+			
+		}
+	}
+}
+//------------------------------------------------------------------------------------
+//------------------------------Zadanie 5
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
+
+namespace ConsoleApp4
+{
+    class Program
+    {
+        static double[] tablica;
+        static int N = 1000;
+        static double suma;
+        static double suma1;
+
+        static object ob = new object();
+        static void sumThread(object par)
+        {
+            double suma = 0;
+            int parint = (int)par;
+
+            //w¹tki mog¹ wykonywaæ pêtle jednoczeœnie
+            for (int i = parint * 100; i < (parint + 1) * 100; i++)
+            {
+                suma += tablica[i];
+            }
+
+            lock (ob) suma1 += suma; //dostêp do zmiennej musi byæ zsynchronizowany
+
+        }
+        static void Main(string[] args)
+        {
+            tablica = new double[N];
+            Random rand = new Random();
+            for(int j = 0; j < N; j++)
+            {
+                tablica[j] = rand.Next(0, 100);
+            }
+            Thread[] t = new Thread[N];
+
+	//Tworzone jest 9 w¹tków i zapamiêtywane s¹ w tablicy
+            for (int i = 0; i < 10; i++)
+            {
+                t[i] = new Thread(sumThread);
+                t[i].Start(i);        
+            }
+
+            //Oczekiwanie na zakoñczenie
+            for (int i = 0; i < 10; i++)
+            {
+                t[i].Join(); //join koñczy siê wtedy kiedy w¹tek przestaje dzia³aæ 
+            }
+            Console.WriteLine("Suma: " + suma1);
+            Console.ReadKey();
+        }
+    }
+}
+//-------------------------------------------------------------------
+//-----------------------Zadanie 6
+using System;
+using System.IO;
+
+namespace ConsoleApp5
+{
+    class Program
+    {
+	static byte[] buffer = new byte[1000];
+
+        static void Main(string[] args)
+        {
+            ReadCallback();
+            Console.ReadKey();
+        }
+
+	//Czytanie siê powiod³o
+        static void ReadDone(IAsyncResult result)
+        {
+            FileStream strumien = (FileStream)result.AsyncState;
+            int num = strumien.EndRead(result);
+            strumien.Close();
+            String Text = BitConverter.ToString(buffer);           
+            Console.WriteLine(Text);
+        }
+
+        static void ReadCallback()
+        {
+	//Operacje odczytu
+            string plik = System.IO.Path.Combine(System.Environment.CurrentDirectory, "text.txt");
+            FileStream strumien = new FileStream(plik,FileMode.Open, FileAccess.Read, FileShare.Read, 1024,FileOptions.Asynchronous);
+            IAsyncResult result = strumien.BeginRead(buffer, 0, buffer.Length,new AsyncCallback(ReadDone), strumien); //Callback jest odpowiedzialny za zamykanie strumienia
+        }
+    }
+}
+//-------------------------------------------------------------------------------------
+//------------------------------------------Zadanie 7
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
+
+namespace ConsoleApp5
+{
+    class Program
+    {
+        static byte[] buffer = new byte[1000];
+
+        static void Main(string[] args)
+        {
+            //Operacje odczytu
+            string plik = System.IO.Path.Combine(System.Environment.CurrentDirectory, "text.txt");
+            FileStream strumien = new FileStream(plik, FileMode.Open, FileAccess.Read, FileShare.Read, 1024, FileOptions.Asynchronous);
+            IAsyncResult result = strumien.BeginRead(buffer, 0, buffer.Length, null, " ");
+
+            int koniec = strumien.EndRead(result);
+            Console.Write(Encoding.Default.GetString(buffer, 0, koniec)); //Wypisanie na ekran i zakoñczenie przez w¹tek
+            Console.ReadKey();
+        }
+    }
+}
+//---------------------------------------------------------------------
+//-----------------------------------Zadanie 8
+using System;
+using System.Diagnostics;
+
+namespace ConsoleApp5
+{
+    class Program
+    {
+        delegate int DelegateType(int n);
+        static DelegateType fib_i;
+        static DelegateType fib_r;
+        static DelegateType sil_i;
+        static DelegateType sil_r;
+
+        public static int fib_iter(int n)
+        {
+            int a = 0;
+            int b = 1;
+            for (int i = 0; i < n; i++)
+            {
+                int temp = a;
+                a = b;
+                b = temp + b;
+            }
+            return a;
+        }
+
+        public static int fib_rek(int n)
+        {
+            if (n <= 1)
+            {
+                return 1;
+            }
+            else
+            {
+                return fib_rek(n - 2) + fib_rek(n - 1);
+            }
+        }
+
+
+        public static int silnia_iter(int n)
+        {
+            int result = 1;
+            for (int i = 1; i <= n; i++)
+            {
+                result *= i;
+            }
+            return result;
+        }
+
+        public static int silnia_rek(int n)
+        {
+            if (n < 1)
+                return 1;
+            else
+                return n * silnia_rek(n - 1);
+        }
+
+
+
+        static void Main(string[] args)
+        {
+            long time1 = 0, time2 = 0, time3 = 0, time4 = 0;
+            Stopwatch stopWatch1 = new Stopwatch();
+            Stopwatch stopWatch2 = new Stopwatch();
+            Stopwatch stopWatch3 = new Stopwatch();
+            Stopwatch stopWatch4 = new Stopwatch();
+
+            stopWatch1.Start();
+            fib_i = new DelegateType(fib_iter);
+            IAsyncResult fi = fib_i.BeginInvoke(10, null, null);
+            stopWatch1.Stop();
+            time1 = stopWatch1.ElapsedMilliseconds;
+            Console.WriteLine("Fibonacci iteracyjnie: " + time1);
+
+            stopWatch2.Start();
+            fib_r = new DelegateType(fib_rek);
+            IAsyncResult fr = fib_r.BeginInvoke(10, null, null);
+            stopWatch2.Stop();
+            time2 = stopWatch2.ElapsedMilliseconds;
+            Console.WriteLine("Fibonacci rekurencyjnie: " + time2);
+
+            stopWatch3.Start();
+            sil_i = new DelegateType(silnia_iter);
+            IAsyncResult si = sil_i.BeginInvoke(10, null, null);
+            stopWatch3.Stop();
+            time3 = stopWatch3.ElapsedMilliseconds;
+            Console.WriteLine("Silnia iteracyjnie: " + time3);
+
+            stopWatch4.Start();
+            sil_r = new DelegateType(silnia_rek);
+            IAsyncResult sr = sil_r.BeginInvoke(10, null, null);
+            stopWatch4.Stop();
+            time4 = stopWatch4.ElapsedMilliseconds;
+            Console.WriteLine("Silnia rekurencyjnie: " + time4);
+
+            Console.ReadKey();
+        }
+    }
+}
+//---------------------------------------------------------------------------------
