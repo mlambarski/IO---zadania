@@ -328,7 +328,7 @@ namespace ConsoleApp5
 
         public static int fib_iter(int n)
         {
-            int a = 0;
+            int a = 1;
             int b = 1;
             for (int i = 0; i < n; i++)
             {
@@ -374,7 +374,6 @@ namespace ConsoleApp5
 
         static void Main(string[] args)
         {
-            long time1 = 0, time2 = 0, time3 = 0, time4 = 0;
             Stopwatch stopWatch1 = new Stopwatch();
             Stopwatch stopWatch2 = new Stopwatch();
             Stopwatch stopWatch3 = new Stopwatch();
@@ -383,30 +382,30 @@ namespace ConsoleApp5
             stopWatch1.Start();
             fib_i = new DelegateType(fib_iter);
             IAsyncResult fi = fib_i.BeginInvoke(10, null, null);
+            int result1 = fib_i.EndInvoke(fi);
             stopWatch1.Stop();
-            time1 = stopWatch1.ElapsedMilliseconds;
-            Console.WriteLine("Fibonacci iteracyjnie: " + time1);
+            Console.WriteLine("Fibonacci iteracyjnie: " + result1 + " czas: " + stopWatch1.ElapsedMilliseconds);
 
             stopWatch2.Start();
             fib_r = new DelegateType(fib_rek);
             IAsyncResult fr = fib_r.BeginInvoke(10, null, null);
+            int result2 = fib_r.EndInvoke(fr);
             stopWatch2.Stop();
-            time2 = stopWatch2.ElapsedMilliseconds;
-            Console.WriteLine("Fibonacci rekurencyjnie: " + time2);
+            Console.WriteLine("Fibonacci rekurencyjnie: " + result2 + " czas: " + stopWatch2.ElapsedMilliseconds);
 
             stopWatch3.Start();
             sil_i = new DelegateType(silnia_iter);
             IAsyncResult si = sil_i.BeginInvoke(10, null, null);
+            int result3 = sil_i.EndInvoke(si);
             stopWatch3.Stop();
-            time3 = stopWatch3.ElapsedMilliseconds;
-            Console.WriteLine("Silnia iteracyjnie: " + time3);
+            Console.WriteLine("Silnia iteracyjnie: " + result3 + " czas: " + stopWatch3.ElapsedMilliseconds);
 
             stopWatch4.Start();
             sil_r = new DelegateType(silnia_rek);
             IAsyncResult sr = sil_r.BeginInvoke(10, null, null);
+            int result4 = sil_r.EndInvoke(sr);
             stopWatch4.Stop();
-            time4 = stopWatch4.ElapsedMilliseconds;
-            Console.WriteLine("Silnia rekurencyjnie: " + time4);
+            Console.WriteLine("Silnia rekurencyjnie: " + result4 + " czas: " + stopWatch4.ElapsedMilliseconds);
 
             Console.ReadKey();
         }
